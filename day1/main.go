@@ -49,10 +49,11 @@ func main() {
 			panic(err)
 		}
 
-		total += first + last
+		combined := (first * 10) + last
+		total += combined
 
 		// FIXME(alecmerdler): Debugging
-		fmt.Printf("Line %d - found %d and %d in %s. Total: %d\n\n", n, first, last, line, total)
+		fmt.Printf("Line %d - found %d and %d = %d in %s. Total: %d\n\n", n, first, last, combined, line, total)
 	}
 
 	fmt.Printf("Answer: %d\n", total)
