@@ -96,24 +96,24 @@ func partOne(lines []string) int {
 }
 
 func partTwo(lines []string) int {
-	lowestForColor := []map[CubeColor]int{}
+	highestForColor := []map[CubeColor]int{}
 
 	for index, line := range lines {
 		id := index + 1
 		game := gameFrom(id, line)
-		lowestForColor = append(lowestForColor, map[CubeColor]int{})
+		highestForColor = append(highestForColor, map[CubeColor]int{})
 
 		for _, grab := range game.Grabs {
 			for color, numPulled := range grab {
-				if currentLowest := lowestForColor[index][color]; currentLowest == 0 || currentLowest > numPulled {
-					lowestForColor[index][color] = numPulled
+				if currentHighest := highestForColor[index][color]; currentHighest < numPulled {
+					highestForColor[index][color] = numPulled
 				}
 			}
 		}
 	}
 
 	total := 0
-	for _, game := range lowestForColor {
+	for _, game := range highestForColor {
 		gamePower := 1
 		for _, lowest := range game {
 			gamePower = gamePower * lowest
