@@ -89,8 +89,37 @@ func partOne(lines []string) int {
 
 	total := 0
 	for _, possibleGame := range possibleGames {
-		fmt.Printf("\nGame %d possible, total = %d", possibleGame.ID, total)
 		total += possibleGame.ID
+	}
+
+	return total
+}
+
+func partTwo(lines []string) int {
+	lowestForColor := []map[CubeColor]int{}
+
+	for index, line := range lines {
+		id := index + 1
+		game := gameFrom(id, line)
+		lowestForColor = append(lowestForColor, map[CubeColor]int{})
+
+		for _, grab := range game.Grabs {
+			for color, numPulled := range grab {
+				if currentLowest := lowestForColor[index][color]; currentLowest == 0 || currentLowest > numPulled {
+					lowestForColor[index][color] = numPulled
+				}
+			}
+		}
+	}
+
+	total := 0
+	for _, game := range lowestForColor {
+		gamePower := 1
+		for _, lowest := range game {
+			gamePower = gamePower * lowest
+		}
+
+		total += gamePower
 	}
 
 	return total
@@ -106,6 +135,8 @@ func main() {
 	lines := strings.Split(file, "\n")
 
 	partOneAnswer := partOne(lines)
-
 	fmt.Printf("\nPart one answer: %d\n", partOneAnswer)
+
+	partTwoAnswer := partTwo(lines)
+	fmt.Printf("\nPart two answer: %d\n", partTwoAnswer)
 }
