@@ -15,118 +15,72 @@ func isSymbol(char rune) bool {
 	return !isDigit(char) && char != 46
 }
 
-func uniqueSymbols(lines []string) map[rune]int {
-	symbols := map[rune]int{}
-	for _, line := range lines {
-		for _, char := range line {
-			if !isDigit(char) {
-				symbols[char] += 1
-			}
-		}
+func findAllDigits(line string, startPos int) string {
+	rightSide := line[startPos:]
+	endPos := strings.IndexFunc(rightSide, func(r rune) bool { return !isDigit(r) })
+	if endPos == -1 {
+		endPos = len(rightSide)
 	}
 
-	return symbols
-}
-
-type Direction int
-
-const (
-	right Direction = iota
-	left
-)
-
-func findAllDigits(line string, startPos int, direction Direction) string {
-	switch direction {
-	case right:
-		rightSide := line[startPos+1:]
-		endPos := strings.Index(rightSide, ".")
-		if endPos == -1 {
-			endPos = len(line) - 1
-		} else {
-			endPos += startPos
-		}
-
-		number := line[startPos+1 : endPos+1]
-		return number
-	case left:
-		leftSide := line[:startPos]
-		endPos := strings.LastIndex(leftSide, ".")
-		if endPos == -1 {
-			endPos = 0
-		}
-
-		number := line[endPos+1 : startPos]
-		return number
-	default:
-		panic("unknown direction")
-	}
-}
-
-func checkLeft(line string, pos, row int) (*Position, int) {
-	if pos > 0 {
-		if isDigit(rune(line[pos-1])) {
-			numberRaw := findAllDigits(line, pos, left)
-			number, err := strconv.Atoi(numberRaw)
-			if err != nil {
-				panic(err)
-			}
-
-			pos := &Position{row, pos - len(numberRaw), pos}
-			return pos, number
-		}
+	number := rightSide[:endPos]
+	_, err := strconv.Atoi(number)
+	if err != nil {
+		panic(err)
 	}
 
-	return nil, 0
-}
-
-func checkRight(line string, pos, row int) (*Position, int) {
-	if pos < len(line) {
-		if isDigit(rune(line[pos+1])) {
-			numberRaw := findAllDigits(line, pos, right)
-			number, err := strconv.Atoi(numberRaw)
-			if err != nil {
-				panic(err)
-			}
-
-			pos := &Position{row, pos + len(numberRaw), pos}
-			return pos, number
-		}
-	}
-
-	return nil, 0
-}
-
-// Position stores information about where a number is located (for deduplication).
-type Position struct {
-	row   int
-	start int
-	end   int
+	return number
 }
 
 func partOne(lines []string) int {
-	found := map[Position]int{}
+	found := []rune{}
 
 	for row, line := range lines {
+		skipTo := 0
+
 		for pos, char := range line {
-			if isSymbol(char) {
-				foundPosition, foundNumber := checkLeft(line, pos, row)
-				if foundPosition != nil {
-					found[*foundPosition] = foundNumber
-				}
+			if pos < skipTo {
+				continue
+			}
+
+			// FIXME(alecmerdler): New approach: find every number and check if it is touching a symbol...
+
+			if isDigit(char) {
+				number := findAllDigits(line, pos)
+				endPos := pos + len(number)
 
 				// TODO(alecmerdler): Check right...
-				foundPosition, foundNumber = checkRight(line, pos, row)
-				if foundPosition != nil {
-					found[*foundPosition] = foundNumber
+				if endPos < len(line) {
+					rightChar := rune(line[endPos+1])
+					if isSymbol(rightChar) {
+						found = append(found, rightChar)
+						continue
+					}
 				}
-				// TODO(alecmerdler): Check above...
-				// TODO(alecmerdler): Check below...
+
+				if pos > 0 {
+					// TODO(alecmerdler): Check left...
+				}
+
+				if row > 0 {
+					// TODO(alecmerdler): Check above...
+				}
+
+				if row < len(lines)-1 {
+					// TODO(alecmerdler): Check below...
+				}
+
+				skipTo = endPos + 1
 			}
 		}
 	}
 
 	total := 0
-	for _, number := range found {
+	for _, char := range found {
+		number, err := strconv.Atoi(string(char))
+		if err != nil {
+			panic(err)
+		}
+
 		total += number
 	}
 
