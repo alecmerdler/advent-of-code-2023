@@ -31,8 +31,64 @@ func findAllDigits(line string, startPos int) string {
 	return number
 }
 
+type checkFunc func(line string, startPos, endPos int) bool
+
+func checkRight(line string, startPos, endPos int) bool {
+	// FIXME(alecmerdler): Debugging
+	fmt.Println("checkRight()")
+
+	if endPos >= len(line)-1 {
+		return false
+	}
+
+	rightChar := rune(line[endPos+1])
+	return isSymbol(rightChar)
+}
+
+func checkLeft(line string, startPos, endPos int) bool {
+	// FIXME(alecmerdler): Debugging
+	fmt.Println("checkLeft()")
+
+	if startPos <= 0 {
+		return false
+	}
+
+	leftChar := rune(line[startPos-1])
+	return isSymbol(leftChar)
+}
+
+func checkAt(line string, pos int) bool {
+	if pos >= len(line) {
+		return false
+	}
+
+	charAt := rune(line[pos])
+	return isSymbol(charAt)
+}
+
+func checkLine(line string, startPos, endPos int) bool {
+	if checkRight(line, startPos, endPos) {
+		return true
+	}
+
+	if checkLeft(line, startPos, endPos) {
+		return true
+	}
+
+	for i := startPos; i == endPos; i++ {
+		if checkAt(line, i) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func partOne(lines []string) int {
-	found := []rune{}
+	found := []string{}
+
+	// FIXME(alecmerdler): Debugging - seeing the total of all the numbers to see the max and compare the total...
+	max := 0
 
 	for row, line := range lines {
 		skipTo := 0
@@ -42,36 +98,41 @@ func partOne(lines []string) int {
 				continue
 			}
 
-			// FIXME(alecmerdler): New approach: find every number and check if it is touching a symbol...
-
+			// FIXME(alecmerdler): Implement new approach: find every number and check if it is touching a symbol...
 			if isDigit(char) {
 				number := findAllDigits(line, pos)
-				endPos := pos + len(number)
+				startPos := pos
+				endPos := startPos + len(number) - 1
 
-				// TODO(alecmerdler): Check right...
-				if endPos < len(line) {
-					rightChar := rune(line[endPos+1])
-					if isSymbol(rightChar) {
-						found = append(found, rightChar)
+				// FIXME(alecmerdler): Debugging...
+				fmt.Printf("L%d: %s\n", row, line)
+				fmt.Printf("Number: %s, End Pos: %d\n", string(number), endPos)
+
+				// FIXME(alecmerdler): Debugging - seeing the total of all the numbers to see the max and compare the total...
+				val, _ := strconv.Atoi(number)
+				max += val
+
+				checkAbove := func(line string, startPos, endPos int) bool {
+					return row > 0 && checkLine(lines[row-1], startPos, endPos)
+				}
+				checkBelow := func(line string, startPos, endPos int) bool {
+					return row < len(lines)-1 && checkLine(lines[row+1], startPos, endPos)
+				}
+
+				checkFuncs := []checkFunc{checkRight, checkLeft, checkAbove, checkBelow}
+				for _, check := range checkFuncs {
+					if check(line, startPos, endPos) {
+						found = append(found, number)
 						continue
 					}
-				}
-
-				if pos > 0 {
-					// TODO(alecmerdler): Check left...
-				}
-
-				if row > 0 {
-					// TODO(alecmerdler): Check above...
-				}
-
-				if row < len(lines)-1 {
-					// TODO(alecmerdler): Check below...
 				}
 
 				skipTo = endPos + 1
 			}
 		}
+
+		// FIXME(alecmerdler): Implement new approach: find every number and check if it is touching a symbol...
+		fmt.Printf("\nMax: %d", max)
 	}
 
 	total := 0
